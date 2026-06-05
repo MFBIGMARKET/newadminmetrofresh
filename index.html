@@ -510,7 +510,11 @@
                             <div class="settings-item-left"><div class="settings-icon-bg" style="background:#e6f4ea; color:#146c2e;">⚡</div> Auto-Approve Rules</div>
                             <div class="settings-arrow">›</div>
                         </div>
-                    </div>
+                        <div class="settings-item" onclick="openCategorySettings()">
+                            <div class="settings-item-left"><div class="settings-icon-bg" style="background:#fef7e0; color:#b36b00;">📋</div> Manage Categories Display</div>
+                            <div class="settings-arrow">›</div>
+                        </div>
+                    </div> 
                 </div>
             </div>
         </main>
@@ -627,6 +631,8 @@
             </div>
         </div>
 
+
+
         <div id="page-auto-approve" class="page-overlay">
             <div class="page-header">
                 <button class="btn btn-outline" style="width:auto; padding:6px 14px; border-radius:50px; font-weight:800;" onclick="closeOverlay('page-auto-approve')">← Back</button>
@@ -642,6 +648,24 @@
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); margin-top:8px; display:block;">Select Categories to Auto-Approve</label>
                 <div id="auto-approve-checkboxes" class="checkbox-grid" style="max-height: 250px; display:block;"></div>
                 <button class="btn btn-primary" onclick="saveAutoApprove(this)" style="margin-top:16px;">Save Rules</button>
+            </div>
+        </div>
+
+        <!-- CATEGORY PREFERENCES PAGE -->
+        <div id="page-category-settings" class="page-overlay">
+            <div class="page-header">
+                <button class="btn btn-outline" style="width:auto; padding:6px 14px; border-radius:50px; font-weight:800;" onclick="closeOverlay('page-category-settings')">← Back</button>
+                <h2 style="font-size:16px; font-weight:800; margin:0; margin-left:16px;">Category Display</h2>
+            </div>
+            <div class="page-body">
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Toggle categories ON/OFF and use arrows to arrange their dashboard order.</p>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted);">Select Branch</label>
+                <select id="cat-pref-branch" class="input-modern" onchange="renderCategoryPreferences()">
+                    <option value="Iritty">Iritty</option>
+                    <option value="Mattannur">Mattannur</option>
+                </select>
+                <div id="cat-pref-list" style="margin-top: 12px; margin-bottom: 24px;"></div>
+                <button class="btn btn-primary" onclick="saveCategoryPreferences(this)">Save Preferences</button>
             </div>
         </div>
 
@@ -746,7 +770,8 @@
 
     let globalFromDate = '';
     let globalToDate = '';
-    let appSettings = { auto_approve_categories: {} };
+    let appSettings = { auto_approve_categories: {}, category_preferences: {} };
+    let currentTempCatPrefs = []; // Holds unsaved drag-and-drop state
 
     const fmt = (num) => '₹' + Math.round(num || 0).toLocaleString('en-IN');
     const fmtDate = (iso) => { if(!iso) return ''; const p = iso.split('-'); return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : iso; };
@@ -905,6 +930,75 @@
         } catch(err) {
             btn.disabled = false; btn.innerText = "Save Rules";
             showAlert("Error saving rules: " + err.message);
+        }
+    }
+
+    function openCategorySettings() {
+        disableNav();
+        document.getElementById('cat-pref-branch').value = adminBranch;
+        renderCategoryPreferences();
+        document.getElementById('page-category-settings').classList.add('active');
+    }
+
+    function renderCategoryPreferences() {
+        const branch = document.getElementById('cat-pref-branch').value;
+        const allDbCats = [...new Set(inventory.filter(i => i.branch === branch).map(i => i.category).filter(Boolean))];
+        
+        // Grab saved prefs or default to empty
+        let savedPrefs = appSettings.category_preferences?.[branch] ? [...appSettings.category_preferences[branch]] : [];
+        
+        // Merge any new categories found in the database that aren't in settings yet
+        allDbCats.forEach(c => {
+            if (!savedPrefs.find(p => p.name === c)) savedPrefs.push({ name: c, active: true });
+        });
+        
+        // Clean up old categories that were deleted from database
+        savedPrefs = savedPrefs.filter(p => allDbCats.includes(p.name));
+        
+        currentTempCatPrefs = savedPrefs;
+        drawCatPrefListUI();
+    }
+
+    function drawCatPrefListUI() {
+        const list = document.getElementById('cat-pref-list'); list.innerHTML = '';
+        currentTempCatPrefs.forEach((cat, index) => {
+            list.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border); padding:10px 14px; border-radius:8px; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <input type="checkbox" style="width:18px; height:18px; accent-color:var(--primary); cursor:pointer;" ${cat.active ? 'checked' : ''} onchange="currentTempCatPrefs[${index}].active = this.checked">
+                        <span style="font-weight:700; font-size:13px; color: ${cat.active ? 'var(--text-main)' : 'var(--border)'};">${cat.name}</span>
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <button class="btn btn-outline" style="padding:4px 8px; font-size:12px; height:auto; width:auto; margin:0;" onclick="moveCatPref(${index}, -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+                        <button class="btn btn-outline" style="padding:4px 8px; font-size:12px; height:auto; width:auto; margin:0;" onclick="moveCatPref(${index}, 1)" ${index === currentTempCatPrefs.length - 1 ? 'disabled' : ''}>↓</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function moveCatPref(index, dir) {
+        const temp = currentTempCatPrefs[index];
+        currentTempCatPrefs[index] = currentTempCatPrefs[index + dir];
+        currentTempCatPrefs[index + dir] = temp;
+        drawCatPrefListUI();
+    }
+
+    async function saveCategoryPreferences(btn) {
+        const branch = document.getElementById('cat-pref-branch').value;
+        if(!appSettings.category_preferences) appSettings.category_preferences = {};
+        appSettings.category_preferences[branch] = currentTempCatPrefs;
+        
+        btn.disabled = true; btn.innerText = "Saving...";
+        try {
+            const { error } = await supabaseClient.from('app_settings').update({ category_preferences: appSettings.category_preferences }).eq('id', 1);
+            if(error) throw error;
+            btn.disabled = false; btn.innerText = "Save Preferences";
+            closeOverlay('page-category-settings');
+            showAlert('Category display preferences saved!');
+            refreshDashboard(); 
+        } catch(err) {
+            btn.disabled = false; btn.innerText = "Save Preferences";
+            showAlert(err.message);
         }
     }
 
@@ -1159,7 +1253,17 @@
         }
         
         const validPOs = pos.filter(po => po.branch === adminBranch);
-        const allCats = [...new Set(inventory.filter(i => i.branch === adminBranch).map(i => i.category).filter(Boolean))];
+        const rawCats = [...new Set(inventory.filter(i => i.branch === adminBranch).map(i => i.category).filter(Boolean))];
+        
+        // Apply Sort and Filter Preferences
+        let branchPrefs = appSettings.category_preferences?.[adminBranch] || [];
+        let activeOrderedCats = [];
+        if (branchPrefs.length > 0) {
+            branchPrefs.forEach(p => { if (p.active) activeOrderedCats.push(p.name); });
+            rawCats.forEach(c => { if (!branchPrefs.some(p => p.name === c)) activeOrderedCats.push(c); }); // Append missing
+        } else {
+            activeOrderedCats = rawCats; // Fallback
+        }
         
         // 1. PO CREATED LOGIC
         if(document.getElementById('tab-dashboard').classList.contains('active')) {
@@ -1167,7 +1271,8 @@
             let totAmtPO = 0; let totCntPO = todayPOs.length;
             const catMapPO = {}; const supMapPO = {}; const brandMapPO = {}; const itemMapPO = {};
             
-            allCats.forEach(c => catMapPO[c] = { amt: 0, pos: [] });
+            // Build Map strictly in preferred order
+            activeOrderedCats.forEach(c => catMapPO[c] = { amt: 0, pos: [] });
 
             todayPOs.forEach(po => {
                 totAmtPO += po.total; const c = po.category || 'Uncategorized';
@@ -1204,13 +1309,13 @@
         }
         
         // 2. PURCHASE RECEIVED LOGIC
-        // 2. PURCHASE RECEIVED LOGIC
         if(document.getElementById('tab-purchase').classList.contains('active')) {
             const rcvdPOs = validPOs.filter(p => p.status === 'Received' && p.receivedDate >= globalFromDate && p.receivedDate <= globalToDate);
             let poAmtRcvd = 0; let actAmtRcvd = 0; let totCntRcvd = rcvdPOs.length;
             const catMapRcvd = {}; const supVarMap = {}; const brandMapRcvd = {};
             
-            allCats.forEach(c => catMapRcvd[c] = { poAmt: 0, actAmt: 0, pos: [] });
+            // Build Map strictly in preferred order
+            activeOrderedCats.forEach(c => catMapRcvd[c] = { poAmt: 0, actAmt: 0, pos: [] });
 
             rcvdPOs.forEach(po => {
                 poAmtRcvd += po.total; actAmtRcvd += po.actualAmount; const c = po.category || 'Uncategorized';
