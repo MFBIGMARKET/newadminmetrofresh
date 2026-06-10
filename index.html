@@ -18,7 +18,8 @@
             --surface: #ffffff; --text-main: #1f1f1f; --text-muted: #5f6368; --border: #dadce0;
             --success: #146c2e; --danger: #b3261e; --warning: #b36b00;
             --grad-green: linear-gradient(135deg, #e6f4ea 0%, #ceead6 100%);
-            --grad-orange: linear-gradient(135deg, #fef7e0 0%, #fce8e6 100%);
+            --grad-yellow: linear-gradient(135deg, #fef7e0 0%, #fde293 100%);
+            --grad-orange: linear-gradient(135deg, #feefe3 0%, #fdc69c 100%);
             --grad-red: linear-gradient(135deg, #fce8e6 0%, #fad2cf 100%);
             --app-max-width: 480px;
         }
@@ -58,6 +59,7 @@
         .cat-amt { font-size: 16px; font-weight: 800; color: var(--text-main); text-align: right; }
         
         .grad-green { background: var(--grad-green); }
+        .grad-yellow { background: var(--grad-yellow); }
         .grad-orange { background: var(--grad-orange); }
         .grad-red { background: var(--grad-red); }
 
@@ -217,7 +219,7 @@
             .tab-section { max-width: 1600px; width: 100%; margin: 0 auto; flex: 1; padding: 0; display: none; }
             
             /* Strict overflow hidden to enforce perfect fit */
-            .tab-section#tab-dashboard.active, .tab-section#tab-purchase.active { display: flex; flex-direction: column; overflow: hidden; }
+            .tab-section#tab-dashboard.active, .tab-section#tab-purchase.active, .tab-section#tab-sales.active { display: flex; flex-direction: column; overflow: hidden; }
             
             /* 4. Desktop Dashboard Perfect Fit (75/25 Split) */
             .dash-wrapper { display: grid; grid-template-columns: 3fr 1fr; gap: 16px; flex: 1; min-height: 0; min-width: 0; width: 100%; }
@@ -239,12 +241,12 @@
             
             /* Compact Categories on Right */
             .cat-list-wrapper { overflow-y: auto; flex: 1; padding-right: 4px; }
-            #po-category-list, #rcvd-category-list { display: flex; flex-direction: column; gap: 6px; }
+            #po-category-list, #rcvd-category-list, #sales-category-list { display: flex; flex-direction: column; gap: 6px; }
             .cat-tile { margin-bottom: 0; border-radius: 6px; padding: 10px 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
             .cat-name { font-size: 12px; } .cat-amt { font-size: 14px; } .cat-meta { font-size: 10px; margin-top:2px;}
             
             /* 5. Settings Pages Grid (Allows Scroll) */
-            .tab-section#tab-settings.active, .tab-section#tab-shelf.active, .tab-section#tab-sales.active { display: block; overflow-y: auto; padding-right: 8px; }
+            .tab-section#tab-settings.active, .tab-section#tab-shelf.active { display: block; overflow-y: auto; padding-right: 8px; }
             .tab-section#tab-settings.active { display: grid !important; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
             .settings-group { border-radius: 8px; margin-bottom: 0; }
 
@@ -359,7 +361,7 @@
 
         <!-- Navigation Strip -->
         <nav class="floating-nav" id="main-nav">
-            <div class="nav-item active" onclick="switchTab('tab-dashboard', 'PO Dashboard', this)">
+            <div class="nav-item" onclick="switchTab('tab-dashboard', 'PO Dashboard', this)">
                 <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                 <span>POs</span>
             </div>
@@ -371,7 +373,7 @@
                 <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4zM2 4v16h20V4H2z" opacity="0.2"/><path d="M3 3v18h18V3H3zm15 14H6v-2h12v2zm0-5H6v-2h12v2zm0-5H6V5h12v2z"/></svg>
                 <span>Shelf</span>
             </div>
-            <div class="nav-item" onclick="switchTab('tab-sales', 'Live Sales', this)">
+            <div class="nav-item active" onclick="switchTab('tab-sales', 'Live Sales', this)">
                 <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
                 <span>Sales</span>
             </div>
@@ -386,7 +388,7 @@
 
         <main class="main-content">
             <!-- DASHBOARD TAB -->
-            <div id="tab-dashboard" class="tab-section active">
+            <div id="tab-dashboard" class="tab-section">
                 <div class="dash-wrapper">
                     <div class="dash-left">
                         <div class="kpi-grid-4">
@@ -477,7 +479,48 @@
 
             <!-- DUMMY TABS -->
             <div id="tab-shelf" class="tab-section"><div class="card" style="text-align:center; padding:40px 16px;"><h2 style="font-size:18px;">Shelf Rentals</h2><p style="font-size:12px; color:var(--text-muted);">Coming Soon</p></div></div>
-            <div id="tab-sales" class="tab-section"><div class="card" style="text-align:center; padding:40px 16px;"><h2 style="font-size:18px;">Sales Analytics</h2><p style="font-size:12px; color:var(--text-muted);">Coming Soon</p></div></div>
+            <div id="tab-sales" class="tab-section active">
+                <div class="dash-wrapper">
+                    <div class="dash-left">
+                        <div class="kpi-grid-4">
+                            <div class="kpi-box"><div class="kpi-label">Total Sale</div><div class="kpi-val" id="kpi-sale-tot" style="color:var(--primary);">₹0</div></div>
+                            <div class="kpi-box"><div class="kpi-label">Total Profit</div><div class="kpi-val" id="kpi-sale-prof" style="color:var(--success);">₹0</div></div>
+                            <div class="kpi-box"><div class="kpi-label">Last Sync</div><div class="kpi-val" id="kpi-sale-sync" style="font-size: 14px; margin-top: 4px;">Never</div></div>
+                            <div class="kpi-box"><div class="kpi-label">Margin %</div><div class="kpi-val" id="kpi-sale-mar">0%</div></div>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="chart-card">
+                                <div class="chart-title">Daily Sales Trend (₹)</div>
+                                <div class="chart-container"><canvas id="salesTrendChart"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <div class="chart-title">Sale by Category (₹)</div>
+                                <div class="chart-container"><canvas id="salesCatChart"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <div class="chart-title">Top 5 Items by Sale</div>
+                                <div class="chart-container"><canvas id="salesTopItemsChart"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <div class="chart-title">Daily Margin % Trend</div>
+                                <div class="chart-container"><canvas id="salesMarginTrendChart"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <div class="chart-title">Profit by Category (₹)</div>
+                                <div class="chart-container"><canvas id="salesProfitCatChart"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <div class="chart-title">Top 5 Items by Profit</div>
+                                <div class="chart-container"><canvas id="salesTopProfitChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dash-right">
+                        <h3 style="font-size:12px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Category Breakdown</h3>
+                        <div id="sales-category-list" class="cat-list-wrapper"></div>
+                    </div>
+                </div>
+            </div>
 
             <!-- SETTINGS TAB -->
             <div id="tab-settings" class="tab-section">
@@ -614,6 +657,13 @@
                     <span id="ven-label" class="upload-text">Upload Vendor List</span>
                 </div>
                 <div class="db-count" id="db-ven-count">Total in DB: 0 vendors</div>
+
+                <input type="file" id="sales-file" accept=".csv" class="hidden" onchange="syncData(this, 'sales')">
+                <div class="upload-zone" onclick="document.getElementById('sales-file').click()">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    <span id="sales-label" class="upload-text">Upload Sales Data</span>
+                </div>
+                <div class="db-count" id="db-sales-count">Total in DB: 0 sales records</div>
             </div>
         </div>
 
@@ -759,7 +809,7 @@
     const windowSupabase = window.supabase; 
     const supabaseClient = windowSupabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let users = []; let inventory = []; let vendors = []; let pos = [];
+    let users = []; let inventory = []; let vendors = []; let pos = []; let sales = [];
     let adminBranch = 'Iritty'; 
     let editingUser = null;
     
@@ -843,16 +893,34 @@
         document.getElementById('date-range-modal').classList.add('active');
     }
 
-    function applyDateRange() {
+    async function fetchSalesData(fromDate, toDate) {
+        let allData = []; let limit = 1000; let start = 0; let hasMore = true;
+        while (hasMore) {
+            const { data, error } = await supabaseClient.from('sales_data')
+                .select('*').gte('transaction_date', fromDate).lte('transaction_date', toDate)
+                .range(start, start + limit - 1);
+            if (error) throw error;
+            if (data && data.length > 0) { allData = allData.concat(data); start += limit; }
+            if (!data || data.length < limit) { hasMore = false; }
+        }
+        return allData;
+    }
+
+    async function applyDateRange() {
         globalFromDate = document.getElementById('modal-from-date').value;
         globalToDate = document.getElementById('modal-to-date').value;
         
         document.getElementById('date-range-modal').classList.remove('active');
-        refreshDashboard();
+        document.getElementById('global-loader').classList.remove('hidden');
+        try {
+            sales = await fetchSalesData(globalFromDate, globalToDate);
+            refreshDashboard();
+        } catch(e) { console.error(e); }
+        document.getElementById('global-loader').classList.add('hidden');
     }
 
     async function loadDataFromSupabase() {
-        document.getElementById('global-loader').classList.remove('hidden'); // SHOW LOADER
+        document.getElementById('global-loader').classList.remove('hidden'); 
         
         const today = new Date();
         const offset = today.getTimezoneOffset() * 60000;
@@ -861,24 +929,35 @@
         globalToDate = localISOTime;
 
         try {
-            // Fetch instantly from the Supabase View (Takes < 0.1s)
             const [resCat, resVen, resUsr, resPos, resSet] = await Promise.all([
                 supabaseClient.from('unique_categories').select('*'), 
                 fetchAllRows('vendors'), fetchAllRows('staff_users'), fetchAllRows('purchase_orders'), fetchAllRows('app_settings')
             ]);
             inventory = resCat.data || []; vendors = resVen; users = resUsr;
+            
             if(resSet && resSet.length > 0) appSettings = resSet[0];
             if(!appSettings.auto_approve_categories) appSettings.auto_approve_categories = {};
+            
             pos = resPos.map(p => ({
                 id: p.po_number, branch: p.branch, supplier: p.supplier,
                 category: p.category, total: p.total_amount, actualAmount: p.actual_amount,
                 status: p.status, items: p.items, isoDate: p.iso_date, receivedDate: p.received_date, createdBy: p.created_by
             }));
-            updateDbCounters(); refreshDashboard();
+
+            // Fetch ONLY the sales for the default loaded date range
+            try {
+                sales = await fetchSalesData(globalFromDate, globalToDate);
+            } catch (saleErr) {
+                console.error("Sales data error:", saleErr);
+                sales = [];
+            }
+
+            updateDbCounters(); 
+            refreshDashboard();
         } catch (err) { 
             showAlert("Error connecting to database. " + err.message); 
         } finally {
-            document.getElementById('global-loader').classList.add('hidden'); // HIDE LOADER
+            document.getElementById('global-loader').classList.add('hidden'); 
         }
     }
 
@@ -942,17 +1021,16 @@
 
     function renderCategoryPreferences() {
         const branch = document.getElementById('cat-pref-branch').value;
-        const allDbCats = [...new Set(inventory.filter(i => i.branch === branch).map(i => i.category).filter(Boolean))];
+        const rawInvCats = inventory.filter(i => i.branch === branch).map(i => i.category);
+        const rawSaleCats = sales.filter(s => s.branch === branch).map(s => s.category);
+        const allDbCats = [...new Set([...rawInvCats, ...rawSaleCats].filter(Boolean))];
         
-        // Grab saved prefs or default to empty
         let savedPrefs = appSettings.category_preferences?.[branch] ? [...appSettings.category_preferences[branch]] : [];
         
-        // Merge any new categories found in the database that aren't in settings yet
         allDbCats.forEach(c => {
             if (!savedPrefs.find(p => p.name === c)) savedPrefs.push({ name: c, active: true });
         });
         
-        // Clean up old categories that were deleted from database
         savedPrefs = savedPrefs.filter(p => allDbCats.includes(p.name));
         
         currentTempCatPrefs = savedPrefs;
@@ -1017,7 +1095,7 @@
             document.getElementById('icon-calendar').classList.remove('hidden');
             document.getElementById('app-title').innerText = `Dashboard - ${adminBranch}`;
         }
-        if(tabId === 'tab-dashboard' || tabId === 'tab-purchase') refreshDashboard();
+        if(tabId === 'tab-dashboard' || tabId === 'tab-purchase' || tabId === 'tab-sales') refreshDashboard();
     }
 
     function toggleNav() {
@@ -1180,10 +1258,17 @@
     }
 
     async function updateDbCounters() {
-        const branch = document.getElementById('upload-branch').value;
-        const { count: invCount } = await supabaseClient.from('inventory').select('*', { count: 'exact', head: true }).eq('branch', branch);
-        document.getElementById('db-inv-count').innerText = `Total in DB: ${invCount || 0} items`;
-        document.getElementById('db-ven-count').innerText = `Total in DB: ${vendors.filter(v => v.branch === branch).length} vendors`;
+        try {
+            const branch = document.getElementById('upload-branch').value;
+            const { count: invCount } = await supabaseClient.from('inventory').select('*', { count: 'exact', head: true }).eq('branch', branch);
+            document.getElementById('db-inv-count').innerText = `Total in DB: ${invCount || 0} items`;
+            document.getElementById('db-ven-count').innerText = `Total in DB: ${vendors.filter(v => v.branch === branch).length} vendors`;
+            
+            const { count: saleCount } = await supabaseClient.from('sales_data').select('*', { count: 'exact', head: true }).eq('branch', branch);
+            document.getElementById('db-sales-count').innerText = `Total in DB: ${saleCount || 0} sales records`;
+        } catch(e) {
+            console.error("Counter error:", e);
+        }
     }
 
     function normalize(obj) { let newObj = {}; for(let key in obj) newObj[key.trim().toLowerCase()] = obj[key]; return newObj; }
@@ -1191,7 +1276,7 @@
     function syncData(input, type) {
         if(!input.files[0]) return;
         const file = input.files[0]; const branch = document.getElementById('upload-branch').value;
-        const label = document.getElementById(type === 'inventory' ? 'inv-label' : 'ven-label');
+        const label = document.getElementById(type === 'inventory' ? 'inv-label' : (type === 'sales' ? 'sales-label' : 'ven-label'));
         const originalText = label.innerText; label.innerText = "Reading file...";
 
         const reader = new FileReader();
@@ -1218,9 +1303,36 @@
                         const { error } = await supabaseClient.from('inventory').upsert(batch.slice(i, i+500), { onConflict: 'item_code, branch' });
                         if(error) throw error;
                     }
-                    
-                    updateDbCounters(); 
-                    label.innerText = `✓ Synced ${batch.length} items`;
+                    updateDbCounters(); label.innerText = `✓ Synced ${batch.length} items`;
+
+                } else if (type === 'sales') {
+                    const batch = json.map(row => {
+                        let iCode = row['itemcode'] || ''; let tDateRaw = row['transactiondate'] || '';
+                        if(!iCode || !tDateRaw) return null;
+                        
+                        let tDate = tDateRaw.split(' ')[0];
+                        if(tDate.includes('/')) {
+                            let p = tDate.split('/');
+                            if(p[2] && p[2].length === 4) tDate = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+                            else if(p[0] && p[0].length === 4) tDate = `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;
+                        } else if(tDate.includes('-')) {
+                            let p = tDate.split('-');
+                            if(p[2] && p[2].length === 4) tDate = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+                        }
+
+                        return { 
+                            branch: branch, transaction_date: tDate, item_code: String(iCode), item_name: row['itemname'] || '', category: row['itemgroupname'] || 'Uncategorized',
+                            quantity: parseFloat(row['itemquantity']) || 0, sale_amount: parseFloat(row['itemtotalamount']) || 0, profit_amount: parseFloat(row['itemprofitamount']) || 0
+                        };
+                    }).filter(Boolean);
+
+                    for(let i=0; i<batch.length; i+=500) {
+                        label.innerText = `Uploading... ${Math.round((i/batch.length)*100)}%`;
+                        const { error } = await supabaseClient.from('sales_data').insert(batch.slice(i, i+500));
+                        if(error) throw error;
+                    }
+                    sales = await fetchAllRows('sales_data'); updateDbCounters(); label.innerText = `✓ Synced ${batch.length} sales`;
+
                 } else {
                     const batch = json.map(v => { let vName = v.name || v.name || ''; if(!vName) return null; return { name: vName, branch: branch }; }).filter(Boolean);
                     for(let i=0; i<batch.length; i+=500) {
@@ -1246,14 +1358,22 @@
     }
 
     function getGradientClass(amt) { if(amt > 100000) return 'grad-red'; if(amt > 50000) return 'grad-orange'; return 'grad-green'; }
+    function getMarginGradientClass(marginPct) { 
+        if (marginPct < 10) return 'grad-red'; 
+        if (marginPct >= 10 && marginPct < 15) return 'grad-orange'; 
+        if (marginPct >= 15 && marginPct < 20) return 'grad-yellow'; 
+        return 'grad-green'; 
+    }
 
     function refreshDashboard() {
-        if(document.getElementById('tab-dashboard').classList.contains('active') || document.getElementById('tab-purchase').classList.contains('active')) {
+        if(document.getElementById('tab-dashboard').classList.contains('active') || document.getElementById('tab-purchase').classList.contains('active') || document.getElementById('tab-sales').classList.contains('active')) {
             document.getElementById('app-title').innerText = `Dashboard - ${adminBranch}`;
         }
         
         const validPOs = pos.filter(po => po.branch === adminBranch);
-        const rawCats = [...new Set(inventory.filter(i => i.branch === adminBranch).map(i => i.category).filter(Boolean))];
+        const rawInvCats = inventory.filter(i => i.branch === adminBranch).map(i => i.category);
+        const rawSaleCats = sales.filter(s => s.branch === adminBranch).map(s => s.category);
+        const rawCats = [...new Set([...rawInvCats, ...rawSaleCats].filter(Boolean))];
         
         // Apply Sort and Filter Preferences
         let branchPrefs = appSettings.category_preferences?.[adminBranch] || [];
@@ -1298,11 +1418,13 @@
             document.getElementById('kpi-po-cats').innerText = Object.keys(catMapPO).filter(k => catMapPO[k].amt > 0).length;
 
             const listPO = document.getElementById('po-category-list'); listPO.innerHTML = '';
-            Object.keys(catMapPO).forEach(cat => {
-                const data = catMapPO[cat]; const grad = getGradientClass(data.amt);
-                listPO.innerHTML += `<div class="cat-tile ${grad}" onclick='openCategoryPage("${cat}", "po", ${JSON.stringify(data.pos).replace(/'/g, "&apos;")})'>
-                    <div><div class="cat-name">${cat}</div><div class="cat-meta">Orders: ${data.pos.length}</div></div>
-                    <div class="cat-amt">${fmt(data.amt)}</div></div>`;
+            activeOrderedCats.forEach(cat => {
+                if (catMapPO[cat]) {
+                    const data = catMapPO[cat]; const grad = getGradientClass(data.amt);
+                    listPO.innerHTML += `<div class="cat-tile ${grad}" onclick='openCategoryPage("${cat}", "po", ${JSON.stringify(data.pos).replace(/'/g, "&apos;")})'>
+                        <div><div class="cat-name">${cat}</div><div class="cat-meta">Orders: ${data.pos.length}</div></div>
+                        <div class="cat-amt">${fmt(data.amt)}</div></div>`;
+                }
             });
             
             drawDesktopCharts(catMapPO, supMapPO, brandMapPO, null, null, validPOs, null, itemMapPO);
@@ -1340,58 +1462,176 @@
             document.getElementById('kpi-rcvd-var').style.color = diff > 0 ? "var(--danger)" : "var(--success)";
 
             const listRcvd = document.getElementById('rcvd-category-list'); listRcvd.innerHTML = '';
-            Object.keys(catMapRcvd).forEach(cat => {
-                const data = catMapRcvd[cat]; const grad = getGradientClass(data.actAmt);
-                listRcvd.innerHTML += `<div class="cat-tile ${grad}" onclick='openCategoryPage("${cat}", "rcvd", ${JSON.stringify(data.pos).replace(/'/g, "&apos;")})'>
-                    <div><div class="cat-name">${cat}</div><div class="cat-meta">Est: ${fmt(data.poAmt)}</div></div>
-                    <div class="cat-amt">${fmt(data.actAmt)}</div></div>`;
+            activeOrderedCats.forEach(cat => {
+                if (catMapRcvd[cat]) {
+                    const data = catMapRcvd[cat]; const grad = getGradientClass(data.actAmt);
+                    listRcvd.innerHTML += `<div class="cat-tile ${grad}" onclick='openCategoryPage("${cat}", "rcvd", ${JSON.stringify(data.pos).replace(/'/g, "&apos;")})'>
+                        <div><div class="cat-name">${cat}</div><div class="cat-meta">Est: ${fmt(data.poAmt)}</div></div>
+                        <div class="cat-amt">${fmt(data.actAmt)}</div></div>`;
+                }
             });
             
             drawDesktopCharts(null, null, null, catMapRcvd, supVarMap, validPOs, brandMapRcvd, null);
+        }
+
+        // 3. SALES TAB LOGIC
+        if(document.getElementById('tab-sales').classList.contains('active')) {
+            const periodSales = sales.filter(s => s.branch === adminBranch && s.transaction_date >= globalFromDate && s.transaction_date <= globalToDate);
+            
+            let totSale = 0; let totProfit = 0; let totQty = 0;
+            const catMapSales = {}; const itemMapSale = {}; const itemMapProfit = {}; const dateMap = {};
+
+            periodSales.forEach(s => {
+                totSale += s.sale_amount;
+                totProfit += s.profit_amount;
+                totQty += s.quantity;
+                
+                const c = s.category || 'Uncategorized';
+                if(!catMapSales[c]) catMapSales[c] = { sale: 0, profit: 0 };
+                catMapSales[c].sale += s.sale_amount;
+                catMapSales[c].profit += s.profit_amount;
+
+                if(!itemMapSale[s.item_name]) itemMapSale[s.item_name] = 0;
+                itemMapSale[s.item_name] += s.sale_amount;
+
+                if(!itemMapProfit[s.item_name]) itemMapProfit[s.item_name] = 0;
+                itemMapProfit[s.item_name] += s.profit_amount;
+
+                if(!dateMap[s.transaction_date]) dateMap[s.transaction_date] = { sale: 0, profit: 0 };
+                dateMap[s.transaction_date].sale += s.sale_amount;
+                dateMap[s.transaction_date].profit += s.profit_amount;
+            });
+
+            document.getElementById('kpi-sale-tot').innerText = fmt(totSale);
+            document.getElementById('kpi-sale-prof').innerText = fmt(totProfit);
+            
+            // Format Last Sync Time safely
+            let syncText = "Never";
+            if (periodSales.length > 0) {
+                // Find the absolute latest created_at timestamp in the loaded sales data
+                const latestRecord = periodSales.reduce((latest, current) => {
+                    if (!current.created_at) return latest;
+                    return (new Date(current.created_at) > new Date(latest.created_at)) ? current : latest;
+                }, periodSales[0] || {});
+
+                if (latestRecord && latestRecord.created_at) {
+                    const d = new Date(latestRecord.created_at);
+                    let hours = d.getHours();
+                    let minutes = d.getMinutes().toString().padStart(2, '0');
+                    let ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12; // the hour '0' should be '12'
+                    
+                    const todayObj = new Date();
+                    const isToday = d.getDate() === todayObj.getDate() && d.getMonth() === todayObj.getMonth() && d.getFullYear() === todayObj.getFullYear();
+                    
+                    syncText = isToday ? `Today ${hours}:${minutes} ${ampm}` : `${d.getDate()}/${d.getMonth()+1} ${hours}:${minutes} ${ampm}`;
+                }
+            }
+            document.getElementById('kpi-sale-sync').innerText = syncText;
+            
+            document.getElementById('kpi-sale-mar').innerText = totSale > 0 ? ((totProfit / totSale) * 100).toFixed(1) + '%' : '0%';
+
+            const listSales = document.getElementById('sales-category-list'); listSales.innerHTML = '';
+            
+            activeOrderedCats.forEach(cat => {
+                if (catMapSales[cat]) {
+                    const data = catMapSales[cat]; 
+                    const marginNum = data.sale > 0 ? (data.profit / data.sale) * 100 : 0;
+                    const marginStr = marginNum.toFixed(1) + '%';
+                    const grad = getMarginGradientClass(marginNum);
+                    listSales.innerHTML += `<div class="cat-tile ${grad}">
+                        <div><div class="cat-name">${cat}</div><div class="cat-meta">Margin: ${marginStr}</div></div>
+                        <div class="cat-amt">${fmt(data.sale)}</div></div>`;
+                }
+            });
+            
+            drawSalesCharts(catMapSales, itemMapSale, itemMapProfit, dateMap);
         }
     }
 
     function destroyChart(c) { if(charts[c]) charts[c].destroy(); }
 
+    function drawSalesCharts(catMap, itemMapSale, itemMapProfit, dateMap) {
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif"; 
+        Chart.defaults.color = '#5f6368'; 
+        Chart.defaults.font.size = 9;
+
+        const getTrendDates = (startStr, endStr) => {
+            let d = []; let start = new Date(startStr); let end = new Date(endStr);
+            let diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            if (diffDays < 10) { start = new Date(end); start.setDate(start.getDate() - 9); }
+            let curr = new Date(start);
+            while(curr <= end) { d.push(curr.toISOString().split('T')[0]); curr.setDate(curr.getDate() + 1); }
+            return d;
+        };
+        const activeDates = getTrendDates(globalFromDate, globalToDate);
+        
+        const shortDate = (d) => { const p = d.split('-'); return p.length===3 ? p[2]+'/'+p[1] : d; };
+        const shortLbl = (s) => s.length > 9 ? s.substring(0,8) + '..' : s;
+
+        // 1. Daily Sales Trend
+        const trendSale = activeDates.map(d => dateMap[d] ? dateMap[d].sale : 0);
+        destroyChart('salesTrendChart');
+        charts['salesTrendChart'] = new Chart(document.getElementById('salesTrendChart'), { type: 'line', data: { labels: activeDates.map(d=>shortDate(d)), datasets: [{ label: 'Sales (₹)', data: trendSale, borderColor: '#1a73e8', tension: 0.3, fill: true, backgroundColor: 'rgba(26, 115, 232, 0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }, y: { beginAtZero: true } } } });
+
+        // 2. Sales by Category
+        const sortedCats = Object.keys(catMap).sort((a,b) => catMap[b].sale - catMap[a].sale).slice(0, 10);
+        destroyChart('salesCatChart');
+        charts['salesCatChart'] = new Chart(document.getElementById('salesCatChart'), { type: 'bar', data: { labels: sortedCats.map(l => shortLbl(l)), datasets: [{ label: 'Sale (₹)', data: sortedCats.map(k => catMap[k].sale), backgroundColor: '#34a853', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } } });
+
+        // 3. Top Items by Sale
+        const topItems = Object.keys(itemMapSale).sort((a,b) => itemMapSale[b] - itemMapSale[a]).slice(0, 5);
+        destroyChart('salesTopItemsChart');
+        charts['salesTopItemsChart'] = new Chart(document.getElementById('salesTopItemsChart'), { type: 'bar', data: { labels: topItems.map(l => shortLbl(l)), datasets: [{ label: 'Sale (₹)', data: topItems.map(k => itemMapSale[k]), backgroundColor: '#1a73e8', borderRadius: 4 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+
+        // 4. Daily Margin %
+        const trendMargin = activeDates.map(d => {
+            if(!dateMap[d] || dateMap[d].sale === 0) return 0;
+            return (dateMap[d].profit / dateMap[d].sale) * 100;
+        });
+        destroyChart('salesMarginTrendChart');
+        charts['salesMarginTrendChart'] = new Chart(document.getElementById('salesMarginTrendChart'), { type: 'line', data: { labels: activeDates.map(d=>shortDate(d)), datasets: [{ label: 'Margin %', data: trendMargin, borderColor: '#ff6d01', tension: 0.3, fill: true, backgroundColor: 'rgba(255, 109, 1, 0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }, y: { beginAtZero: true } } } });
+
+        // 5. Profit by Category
+        const sortedProfCats = Object.keys(catMap).sort((a,b) => catMap[b].profit - catMap[a].profit).slice(0, 10);
+        destroyChart('salesProfitCatChart');
+        charts['salesProfitCatChart'] = new Chart(document.getElementById('salesProfitCatChart'), { type: 'bar', data: { labels: sortedProfCats.map(l => shortLbl(l)), datasets: [{ label: 'Profit (₹)', data: sortedProfCats.map(k => catMap[k].profit), backgroundColor: '#9c27b0', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } } });
+
+        // 6. Top Items by Profit
+        const topProfitItems = Object.keys(itemMapProfit).sort((a,b) => itemMapProfit[b] - itemMapProfit[a]).slice(0, 5);
+        destroyChart('salesTopProfitChart');
+        charts['salesTopProfitChart'] = new Chart(document.getElementById('salesTopProfitChart'), { type: 'bar', data: { labels: topProfitItems.map(l => shortLbl(l)), datasets: [{ label: 'Profit (₹)', data: topProfitItems.map(k => itemMapProfit[k]), backgroundColor: '#00bcd4', borderRadius: 4 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+    }
+
     function drawDesktopCharts(poCatMap, poSupMap, poBrandMap, rcvdCatMap, rcvdSupMap, allPOs, rcvdBrandMap, poItemMap) {
         Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif"; 
         Chart.defaults.color = '#5f6368'; 
-        Chart.defaults.font.size = 10;
+        Chart.defaults.font.size = 9;
         
         const getTrendDates = (startStr, endStr) => {
             let d = []; 
             let start = new Date(startStr); 
             let end = new Date(endStr);
-            
-            // Calculate difference in days (inclusive)
             let diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
-            
-            // Force minimum 10 days for line charts
-            if (diffDays < 10) {
-                start = new Date(end);
-                start.setDate(start.getDate() - 9);
-            }
-            
+            if (diffDays < 10) { start = new Date(end); start.setDate(start.getDate() - 9); }
             let curr = new Date(start);
-            while(curr <= end) {
-                d.push(curr.toISOString().split('T')[0]);
-                curr.setDate(curr.getDate() + 1);
-            }
+            while(curr <= end) { d.push(curr.toISOString().split('T')[0]); curr.setDate(curr.getDate() + 1); }
             return d;
         };
         const activeDates = getTrendDates(globalFromDate, globalToDate);
+        
+        const shortDate = (d) => { const p = d.split('-'); return p.length===3 ? p[2]+'/'+p[1] : d; };
+        const shortLbl = (s) => s.length > 9 ? s.substring(0,8) + '..' : s;
 
         // --- PO DASHBOARD CHARTS ---
         if(poCatMap && document.getElementById('poDesktopChart')) {
             const labels = Object.keys(poCatMap).filter(k => poCatMap[k].amt > 0);
             
-            // 1. Volume Bar
             destroyChart('poDesktopChart');
-            chartDataStore['poVolume'] = { type: 'bar', data: { labels: labels, datasets: [{ label: 'Order Value (₹)', data: labels.map(k => poCatMap[k].amt), backgroundColor: '#1a73e8', borderRadius: 4 }] }};
-            charts['poDesktopChart'] = new Chart(document.getElementById('poDesktopChart'), { ...chartDataStore['poVolume'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            chartDataStore['poVolume'] = { type: 'bar', data: { labels: labels.map(l=>shortLbl(l)), datasets: [{ label: 'Order Value (₹)', data: labels.map(k => poCatMap[k].amt), backgroundColor: '#1a73e8', borderRadius: 4 }] }};
+            charts['poDesktopChart'] = new Chart(document.getElementById('poDesktopChart'), { ...chartDataStore['poVolume'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } } });
 
-            
-            // 2. PO Ageing Report (Unreceived Value)
             const todayDate = new Date(); 
             const tzOffset = todayDate.getTimezoneOffset() * 60000;
             const refDate = new Date(todayDate - tzOffset); 
@@ -1402,7 +1642,6 @@
             allPOs.filter(p => p.status !== 'Received').forEach(po => {
                 const poD = new Date(po.isoDate);
                 const diffDays = Math.floor((refDate - poD) / (1000 * 60 * 60 * 24));
-                
                 if (diffDays <= 2) { ageBuckets['0-2 Days'] += po.total; ageRawData['0-2 Days'].push(po); }
                 else if (diffDays <= 5) { ageBuckets['3-5 Days'] += po.total; ageRawData['3-5 Days'].push(po); }
                 else if (diffDays <= 10) { ageBuckets['6-10 Days'] += po.total; ageRawData['6-10 Days'].push(po); }
@@ -1410,42 +1649,28 @@
             });
 
             destroyChart('poAgeingChart');
-            chartDataStore['poAgeing'] = { 
-                type: 'bar', 
-                _rawData: ageRawData, // Embed the raw POs for drill-down
-                data: { 
-                    labels: Object.keys(ageBuckets), 
-                    datasets: [{ label: 'Pending Value (₹)', data: Object.values(ageBuckets), backgroundColor: ['#34a853', '#fbbc04', '#ff6d01', '#ea4335'], borderRadius: 4 }] 
-                }
-            };
-            charts['poAgeingChart'] = new Chart(document.getElementById('poAgeingChart'), { 
-                ...chartDataStore['poAgeing'], 
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
-            });
+            chartDataStore['poAgeing'] = { type: 'bar', _rawData: ageRawData, data: { labels: Object.keys(ageBuckets), datasets: [{ label: 'Pending Value (₹)', data: Object.values(ageBuckets), backgroundColor: ['#34a853', '#fbbc04', '#ff6d01', '#ea4335'], borderRadius: 4 }] }};
+            charts['poAgeingChart'] = new Chart(document.getElementById('poAgeingChart'), { ...chartDataStore['poAgeing'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
             
-            // 3. Line Trend (Count)
             const trendData = activeDates.map(d => allPOs.filter(p => p.isoDate === d).length);
             destroyChart('poLineChart');
-            chartDataStore['poTrend'] = { type: 'line', data: { labels: activeDates.map(d=>fmtDate(d)), datasets: [{ label: 'POs Created', data: trendData, borderColor: '#ea4335', tension: 0.3, fill: true, backgroundColor: 'rgba(234, 67, 53, 0.1)' }] }};
-            charts['poLineChart'] = new Chart(document.getElementById('poLineChart'), { ...chartDataStore['poTrend'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+            chartDataStore['poTrend'] = { type: 'line', data: { labels: activeDates.map(d=>shortDate(d)), datasets: [{ label: 'POs Created', data: trendData, borderColor: '#ea4335', tension: 0.3, fill: true, backgroundColor: 'rgba(234, 67, 53, 0.1)' }] }};
+            charts['poLineChart'] = new Chart(document.getElementById('poLineChart'), { ...chartDataStore['poTrend'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }, y: { beginAtZero: true } } } });
             
-            // 4. Top Suppliers
             const topSupLabels = Object.keys(poSupMap).sort((a,b) => poSupMap[b] - poSupMap[a]).slice(0, 5);
             destroyChart('poSupplierChart');
-            chartDataStore['poSup'] = { type: 'bar', data: { labels: topSupLabels.map(l => l.substring(0,10)), datasets: [{ label: 'Volume (₹)', data: topSupLabels.map(k => poSupMap[k]), backgroundColor: '#fbbc04', borderRadius: 4 }] }};
+            chartDataStore['poSup'] = { type: 'bar', data: { labels: topSupLabels.map(l => shortLbl(l)), datasets: [{ label: 'Volume (₹)', data: topSupLabels.map(k => poSupMap[k]), backgroundColor: '#fbbc04', borderRadius: 4 }] }};
             charts['poSupplierChart'] = new Chart(document.getElementById('poSupplierChart'), { ...chartDataStore['poSup'], options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
 
-            // 5. Brand Distribution
             const brandLabels = Object.keys(poBrandMap).sort((a,b) => poBrandMap[b] - poBrandMap[a]).slice(0, 6);
             destroyChart('poBrandChart');
             chartDataStore['poBrand'] = { type: 'doughnut', data: { labels: brandLabels, datasets: [{ label: 'Value (₹)', data: brandLabels.map(k => poBrandMap[k]), backgroundColor: ['#ea4335', '#1a73e8', '#fbbc04', '#34a853', '#46bdc6', '#dadce0'] }] }};
             charts['poBrandChart'] = new Chart(document.getElementById('poBrandChart'), { ...chartDataStore['poBrand'], options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right' } } } });
 
-            // 6. Daily Order Value Trend
             const dailyValData = activeDates.map(d => { const dPos = allPOs.filter(p => p.isoDate === d); return dPos.reduce((s,p)=>s+p.total, 0); });
             destroyChart('poDailyValChart');
-            chartDataStore['poDailyVal'] = { type: 'line', data: { labels: activeDates.map(d=>fmtDate(d)), datasets: [{ label: 'Daily Value (₹)', data: dailyValData, borderColor: '#1a73e8', tension: 0.3, fill: true, backgroundColor: 'rgba(26, 115, 232, 0.1)' }] }};
-            charts['poDailyValChart'] = new Chart(document.getElementById('poDailyValChart'), { ...chartDataStore['poDailyVal'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+            chartDataStore['poDailyVal'] = { type: 'line', data: { labels: activeDates.map(d=>shortDate(d)), datasets: [{ label: 'Daily Value (₹)', data: dailyValData, borderColor: '#1a73e8', tension: 0.3, fill: true, backgroundColor: 'rgba(26, 115, 232, 0.1)' }] }};
+            charts['poDailyValChart'] = new Chart(document.getElementById('poDailyValChart'), { ...chartDataStore['poDailyVal'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }, y: { beginAtZero: true } } } });
         }
         
         // --- RCVD DASHBOARD CHARTS ---
@@ -1453,39 +1678,33 @@
             const labels = Object.keys(rcvdCatMap).filter(k => rcvdCatMap[k].actAmt > 0);
             const palette = ['#34a853', '#9c27b0', '#ff6d01', '#1a73e8', '#e91e63', '#00bcd4', '#ffeb3b']; 
 
-            // 1. Volume Bar (Multi-color)
             destroyChart('rcvdDesktopChart');
-            chartDataStore['rcvdVolume'] = { type: 'bar', data: { labels: labels, datasets: [{ label: 'Actual Rcvd (₹)', data: labels.map(k => rcvdCatMap[k].actAmt), backgroundColor: palette, borderRadius: 4 }] }};
-            charts['rcvdDesktopChart'] = new Chart(document.getElementById('rcvdDesktopChart'), { ...chartDataStore['rcvdVolume'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            chartDataStore['rcvdVolume'] = { type: 'bar', data: { labels: labels.map(l=>shortLbl(l)), datasets: [{ label: 'Actual Rcvd (₹)', data: labels.map(k => rcvdCatMap[k].actAmt), backgroundColor: palette, borderRadius: 4 }] }};
+            charts['rcvdDesktopChart'] = new Chart(document.getElementById('rcvdDesktopChart'), { ...chartDataStore['rcvdVolume'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } } });
 
-            // 2. Variance Group Bar (Grey vs Blue)
             destroyChart('rcvdVarianceChart');
-            chartDataStore['rcvdVar'] = { type: 'bar', data: { labels: labels, datasets: [ { label: 'System Est', data: labels.map(k => rcvdCatMap[k].poAmt), backgroundColor: '#dadce0' }, { label: 'Actual Rcvd', data: labels.map(k => rcvdCatMap[k].actAmt), backgroundColor: '#1a73e8' } ]}};
-            charts['rcvdVarianceChart'] = new Chart(document.getElementById('rcvdVarianceChart'), { ...chartDataStore['rcvdVar'], options: { responsive: true, maintainAspectRatio: false } });
+            chartDataStore['rcvdVar'] = { type: 'bar', data: { labels: labels.map(l=>shortLbl(l)), datasets: [ { label: 'System Est', data: labels.map(k => rcvdCatMap[k].poAmt), backgroundColor: '#dadce0' }, { label: 'Actual Rcvd', data: labels.map(k => rcvdCatMap[k].actAmt), backgroundColor: '#1a73e8' } ]}};
+            charts['rcvdVarianceChart'] = new Chart(document.getElementById('rcvdVarianceChart'), { ...chartDataStore['rcvdVar'], options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } } });
             
-            // 3. Receipt Trends (Purple)
             const trendData = activeDates.map(d => allPOs.filter(p => p.status==='Received' && p.receivedDate === d).reduce((s,p)=>s+p.actualAmount, 0));
             destroyChart('rcvdLineChart');
-            chartDataStore['rcvdTrend'] = { type: 'line', data: { labels: activeDates.map(d=>fmtDate(d)), datasets: [{ label: 'Value Rcvd (₹)', data: trendData, borderColor: '#9c27b0', tension: 0.3, fill: true, backgroundColor: 'rgba(156, 39, 176, 0.1)' }] }};
-            charts['rcvdLineChart'] = new Chart(document.getElementById('rcvdLineChart'), { ...chartDataStore['rcvdTrend'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+            chartDataStore['rcvdTrend'] = { type: 'line', data: { labels: activeDates.map(d=>shortDate(d)), datasets: [{ label: 'Value Rcvd (₹)', data: trendData, borderColor: '#9c27b0', tension: 0.3, fill: true, backgroundColor: 'rgba(156, 39, 176, 0.1)' }] }};
+            charts['rcvdLineChart'] = new Chart(document.getElementById('rcvdLineChart'), { ...chartDataStore['rcvdTrend'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }, y: { beginAtZero: true } } } });
             
-            // 4. Supplier Variances (Red/Green logic)
             const varSupLabels = Object.keys(rcvdSupMap).sort((a,b) => Math.abs(rcvdSupMap[b]) - Math.abs(rcvdSupMap[a])).slice(0, 5);
             const varSupData = varSupLabels.map(k => rcvdSupMap[k]);
             destroyChart('rcvdSupplierChart');
-            chartDataStore['rcvdSup'] = { type: 'bar', data: { labels: varSupLabels.map(l => l.substring(0,10)), datasets: [{ label: 'Variance (₹)', data: varSupData, backgroundColor: varSupData.map(v => v>0?'#ea4335':'#34a853'), borderRadius: 4 }] }};
+            chartDataStore['rcvdSup'] = { type: 'bar', data: { labels: varSupLabels.map(l => shortLbl(l)), datasets: [{ label: 'Variance (₹)', data: varSupData, backgroundColor: varSupData.map(v => v>0?'#ea4335':'#34a853'), borderRadius: 4 }] }};
             charts['rcvdSupplierChart'] = new Chart(document.getElementById('rcvdSupplierChart'), { ...chartDataStore['rcvdSup'], options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
 
-            // 5. Variance Trend Line (Orange)
             const varTrendData = activeDates.map(d => {
                 const rPOs = allPOs.filter(p => p.status === 'Received' && p.receivedDate === d);
                 return rPOs.reduce((s,p) => s + (p.actualAmount - p.total), 0);
             });
             destroyChart('rcvdVarTrendChart');
-            chartDataStore['rcvdVarTrend'] = { type: 'line', data: { labels: activeDates.map(d=>fmtDate(d)), datasets: [{ label: 'Net Variance (₹)', data: varTrendData, borderColor: '#ff6d01', tension: 0.1, fill: true, backgroundColor: 'rgba(255, 109, 1, 0.1)' }] }};
-            charts['rcvdVarTrendChart'] = new Chart(document.getElementById('rcvdVarTrendChart'), { ...chartDataStore['rcvdVarTrend'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            chartDataStore['rcvdVarTrend'] = { type: 'line', data: { labels: activeDates.map(d=>shortDate(d)), datasets: [{ label: 'Net Variance (₹)', data: varTrendData, borderColor: '#ff6d01', tension: 0.1, fill: true, backgroundColor: 'rgba(255, 109, 1, 0.1)' }] }};
+            charts['rcvdVarTrendChart'] = new Chart(document.getElementById('rcvdVarTrendChart'), { ...chartDataStore['rcvdVarTrend'], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } } } });
 
-            // 6. Received Brand Distribution (New Distinct Palette)
             const brandLabels = rcvdBrandMap ? Object.keys(rcvdBrandMap).sort((a,b) => rcvdBrandMap[b] - rcvdBrandMap[a]).slice(0, 6) : [];
             destroyChart('rcvdBrandChart');
             chartDataStore['rcvdBrand'] = { type: 'doughnut', data: { labels: brandLabels, datasets: [{ label: 'Value (₹)', data: brandLabels.map(k => rcvdBrandMap[k]), backgroundColor: ['#00bcd4', '#ff9800', '#e91e63', '#8bc34a', '#3f51b5', '#795548'] }] }};
