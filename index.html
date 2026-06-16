@@ -912,10 +912,7 @@
         
         document.getElementById('date-range-modal').classList.remove('active');
         document.getElementById('global-loader').classList.remove('hidden');
-        try {
-            sales = await fetchSalesData(globalFromDate, globalToDate);
-            refreshDashboard();
-        } catch(e) { console.error(e); }
+        try { refreshDashboard(); } catch(e) { console.error(e); }
         document.getElementById('global-loader').classList.add('hidden');
     }
 
@@ -944,13 +941,7 @@
                 status: p.status, items: p.items, isoDate: p.iso_date, receivedDate: p.received_date, createdBy: p.created_by
             }));
 
-            // Fetch ONLY the sales for the default loaded date range
-            try {
-                sales = await fetchSalesData(globalFromDate, globalToDate);
-            } catch (saleErr) {
-                console.error("Sales data error:", saleErr);
-                sales = [];
-            }
+            
 
             updateDbCounters(); 
             refreshDashboard();
@@ -1474,88 +1465,58 @@
             drawDesktopCharts(null, null, null, catMapRcvd, supVarMap, validPOs, brandMapRcvd, null);
         }
 
-        // 3. SALES TAB LOGIC
+        // 3. SALES TAB LOGIC (Instant Server Aggregation)
         if(document.getElementById('tab-sales').classList.contains('active')) {
-            const periodSales = sales.filter(s => s.branch === adminBranch && s.transaction_date >= globalFromDate && s.transaction_date <= globalToDate);
+            document.getElementById('global-loader').classList.remove('hidden');
             
-            let totSale = 0; let totProfit = 0; let totQty = 0;
-            const catMapSales = {}; const itemMapSale = {}; const itemMapProfit = {}; const dateMap = {};
-
-            periodSales.forEach(s => {
-                totSale += s.sale_amount;
-                totProfit += s.profit_amount;
-                totQty += s.quantity;
+            supabaseClient.rpc('get_admin_dashboard_data', { p_branch: adminBranch, p_start_date: globalFromDate, p_end_date: globalToDate }).then(res => {
+                document.getElementById('global-loader').classList.add('hidden');
+                if (res.error) { showAlert("Analytics sync failed."); return; }
                 
-                const c = s.category || 'Uncategorized';
-                if(!catMapSales[c]) catMapSales[c] = { sale: 0, profit: 0 };
-                catMapSales[c].sale += s.sale_amount;
-                catMapSales[c].profit += s.profit_amount;
+                const sData = res.data;
+                const tot = sData.totals.tot_sale;
+                const prof = sData.totals.tot_profit;
 
-                if(!itemMapSale[s.item_name]) itemMapSale[s.item_name] = 0;
-                itemMapSale[s.item_name] += s.sale_amount;
+                document.getElementById('kpi-sale-tot').innerText = fmt(tot);
+                document.getElementById('kpi-sale-prof').innerText = fmt(prof);
+                document.getElementById('kpi-sale-mar').innerText = tot > 0 ? ((prof / tot) * 100).toFixed(1) + '%' : '0%';
 
-                if(!itemMapProfit[s.item_name]) itemMapProfit[s.item_name] = 0;
-                itemMapProfit[s.item_name] += s.profit_amount;
-
-                if(!dateMap[s.transaction_date]) dateMap[s.transaction_date] = { sale: 0, profit: 0 };
-                dateMap[s.transaction_date].sale += s.sale_amount;
-                dateMap[s.transaction_date].profit += s.profit_amount;
-            });
-
-            document.getElementById('kpi-sale-tot').innerText = fmt(totSale);
-            document.getElementById('kpi-sale-prof').innerText = fmt(totProfit);
-            
-            // Format Last Sync Time safely
-            let syncText = "Never";
-            if (periodSales.length > 0) {
-                // Find the absolute latest created_at timestamp in the loaded sales data
-                const latestRecord = periodSales.reduce((latest, current) => {
-                    if (!current.created_at) return latest;
-                    return (new Date(current.created_at) > new Date(latest.created_at)) ? current : latest;
-                }, periodSales[0] || {});
-
-                if (latestRecord && latestRecord.created_at) {
-                    const d = new Date(latestRecord.created_at);
-                    let hours = d.getHours();
-                    let minutes = d.getMinutes().toString().padStart(2, '0');
-                    let ampm = hours >= 12 ? 'PM' : 'AM';
-                    hours = hours % 12;
-                    hours = hours ? hours : 12; // the hour '0' should be '12'
-                    
+                // Format Last Sync
+                let syncText = "Never";
+                if (sData.totals.last_sync) {
+                    const d = new Date(sData.totals.last_sync);
+                    let hours = d.getHours(); let minutes = d.getMinutes().toString().padStart(2, '0');
+                    let ampm = hours >= 12 ? 'PM' : 'AM'; hours = hours % 12; hours = hours ? hours : 12; 
                     const todayObj = new Date();
                     const isToday = d.getDate() === todayObj.getDate() && d.getMonth() === todayObj.getMonth() && d.getFullYear() === todayObj.getFullYear();
-                    
                     syncText = isToday ? `Today ${hours}:${minutes} ${ampm}` : `${d.getDate()}/${d.getMonth()+1} ${hours}:${minutes} ${ampm}`;
                 }
-            }
-            document.getElementById('kpi-sale-sync').innerText = syncText;
-            
-            document.getElementById('kpi-sale-mar').innerText = totSale > 0 ? ((totProfit / totSale) * 100).toFixed(1) + '%' : '0%';
+                document.getElementById('kpi-sale-sync').innerText = syncText;
 
-            const listSales = document.getElementById('sales-category-list'); listSales.innerHTML = '';
-            
-            activeOrderedCats.forEach(cat => {
-                if (catMapSales[cat]) {
-                    const data = catMapSales[cat]; 
-                    const marginNum = data.sale > 0 ? (data.profit / data.sale) * 100 : 0;
-                    const marginStr = marginNum.toFixed(1) + '%';
-                    const grad = getMarginGradientClass(marginNum);
-                    listSales.innerHTML += `<div class="cat-tile ${grad}">
-                        <div><div class="cat-name">${cat}</div><div class="cat-meta">Margin: ${marginStr}</div></div>
-                        <div class="cat-amt">${fmt(data.sale)}</div></div>`;
-                }
+                // Build category maps
+                const listSales = document.getElementById('sales-category-list'); listSales.innerHTML = '';
+                const mapCat = {}; sData.cat_map.forEach(c => mapCat[c.category] = c);
+                
+                activeOrderedCats.forEach(cat => {
+                    if (mapCat[cat]) {
+                        const data = mapCat[cat]; 
+                        const marginNum = data.sale > 0 ? (data.profit / data.sale) * 100 : 0;
+                        const grad = getMarginGradientClass(marginNum);
+                        listSales.innerHTML += `<div class="cat-tile ${grad}">
+                            <div><div class="cat-name">${cat}</div><div class="cat-meta">Margin: ${marginNum.toFixed(1)}%</div></div>
+                            <div class="cat-amt">${fmt(data.sale)}</div></div>`;
+                    }
+                });
+
+                drawSalesCharts(sData);
             });
-            
-            drawSalesCharts(catMapSales, itemMapSale, itemMapProfit, dateMap);
         }
     }
 
     function destroyChart(c) { if(charts[c]) charts[c].destroy(); }
 
-    function drawSalesCharts(catMap, itemMapSale, itemMapProfit, dateMap) {
-        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif"; 
-        Chart.defaults.color = '#5f6368'; 
-        Chart.defaults.font.size = 9;
+    function drawSalesCharts(sData) {
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif"; Chart.defaults.color = '#5f6368'; Chart.defaults.font.size = 9;
 
         const getTrendDates = (startStr, endStr) => {
             let d = []; let start = new Date(startStr); let end = new Date(endStr);
@@ -1566,42 +1527,32 @@
             return d;
         };
         const activeDates = getTrendDates(globalFromDate, globalToDate);
-        
         const shortDate = (d) => { const p = d.split('-'); return p.length===3 ? p[2]+'/'+p[1] : d; };
         const shortLbl = (s) => s.length > 9 ? s.substring(0,8) + '..' : s;
 
-        // 1. Daily Sales Trend
-        const trendSale = activeDates.map(d => dateMap[d] ? dateMap[d].sale : 0);
+        const dMap = {}; sData.date_map.forEach(d => dMap[d.t_date] = d);
+
+        const trendSale = activeDates.map(d => dMap[d] ? dMap[d].sale : 0);
         destroyChart('salesTrendChart');
         charts['salesTrendChart'] = new Chart(document.getElementById('salesTrendChart'), { type: 'line', data: { labels: activeDates.map(d=>shortDate(d)), datasets: [{ label: 'Sales (₹)', data: trendSale, borderColor: '#1a73e8', tension: 0.3, fill: true, backgroundColor: 'rgba(26, 115, 232, 0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }, y: { beginAtZero: true } } } });
 
-        // 2. Sales by Category
-        const sortedCats = Object.keys(catMap).sort((a,b) => catMap[b].sale - catMap[a].sale).slice(0, 10);
+        const catMap = [...sData.cat_map].sort((a,b) => b.sale - a.sale).slice(0, 10);
         destroyChart('salesCatChart');
-        charts['salesCatChart'] = new Chart(document.getElementById('salesCatChart'), { type: 'bar', data: { labels: sortedCats.map(l => shortLbl(l)), datasets: [{ label: 'Sale (₹)', data: sortedCats.map(k => catMap[k].sale), backgroundColor: '#34a853', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } } });
+        charts['salesCatChart'] = new Chart(document.getElementById('salesCatChart'), { type: 'bar', data: { labels: catMap.map(c => shortLbl(c.category)), datasets: [{ label: 'Sale (₹)', data: catMap.map(c => c.sale), backgroundColor: '#34a853', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } } });
 
-        // 3. Top Items by Sale
-        const topItems = Object.keys(itemMapSale).sort((a,b) => itemMapSale[b] - itemMapSale[a]).slice(0, 5);
         destroyChart('salesTopItemsChart');
-        charts['salesTopItemsChart'] = new Chart(document.getElementById('salesTopItemsChart'), { type: 'bar', data: { labels: topItems.map(l => shortLbl(l)), datasets: [{ label: 'Sale (₹)', data: topItems.map(k => itemMapSale[k]), backgroundColor: '#1a73e8', borderRadius: 4 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        charts['salesTopItemsChart'] = new Chart(document.getElementById('salesTopItemsChart'), { type: 'bar', data: { labels: sData.item_sale.map(i => shortLbl(i.item_name)), datasets: [{ label: 'Sale (₹)', data: sData.item_sale.map(i => i.sale), backgroundColor: '#1a73e8', borderRadius: 4 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
 
-        // 4. Daily Margin %
-        const trendMargin = activeDates.map(d => {
-            if(!dateMap[d] || dateMap[d].sale === 0) return 0;
-            return (dateMap[d].profit / dateMap[d].sale) * 100;
-        });
+        const trendMargin = activeDates.map(d => { if(!dMap[d] || dMap[d].sale === 0) return 0; return (dMap[d].profit / dMap[d].sale) * 100; });
         destroyChart('salesMarginTrendChart');
         charts['salesMarginTrendChart'] = new Chart(document.getElementById('salesMarginTrendChart'), { type: 'line', data: { labels: activeDates.map(d=>shortDate(d)), datasets: [{ label: 'Margin %', data: trendMargin, borderColor: '#ff6d01', tension: 0.3, fill: true, backgroundColor: 'rgba(255, 109, 1, 0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }, y: { beginAtZero: true } } } });
 
-        // 5. Profit by Category
-        const sortedProfCats = Object.keys(catMap).sort((a,b) => catMap[b].profit - catMap[a].profit).slice(0, 10);
+        const profMap = [...sData.cat_map].sort((a,b) => b.profit - a.profit).slice(0, 10);
         destroyChart('salesProfitCatChart');
-        charts['salesProfitCatChart'] = new Chart(document.getElementById('salesProfitCatChart'), { type: 'bar', data: { labels: sortedProfCats.map(l => shortLbl(l)), datasets: [{ label: 'Profit (₹)', data: sortedProfCats.map(k => catMap[k].profit), backgroundColor: '#9c27b0', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } } });
+        charts['salesProfitCatChart'] = new Chart(document.getElementById('salesProfitCatChart'), { type: 'bar', data: { labels: profMap.map(c => shortLbl(c.category)), datasets: [{ label: 'Profit (₹)', data: profMap.map(c => c.profit), backgroundColor: '#9c27b0', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } } });
 
-        // 6. Top Items by Profit
-        const topProfitItems = Object.keys(itemMapProfit).sort((a,b) => itemMapProfit[b] - itemMapProfit[a]).slice(0, 5);
         destroyChart('salesTopProfitChart');
-        charts['salesTopProfitChart'] = new Chart(document.getElementById('salesTopProfitChart'), { type: 'bar', data: { labels: topProfitItems.map(l => shortLbl(l)), datasets: [{ label: 'Profit (₹)', data: topProfitItems.map(k => itemMapProfit[k]), backgroundColor: '#00bcd4', borderRadius: 4 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        charts['salesTopProfitChart'] = new Chart(document.getElementById('salesTopProfitChart'), { type: 'bar', data: { labels: sData.item_profit.map(i => shortLbl(i.item_name)), datasets: [{ label: 'Profit (₹)', data: sData.item_profit.map(i => i.profit), backgroundColor: '#00bcd4', borderRadius: 4 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
     }
 
     function drawDesktopCharts(poCatMap, poSupMap, poBrandMap, rcvdCatMap, rcvdSupMap, allPOs, rcvdBrandMap, poItemMap) {
