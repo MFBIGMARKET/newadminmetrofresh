@@ -95,18 +95,16 @@
         .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text-main); }
         .btn-danger { background: #fce8e6; color: var(--danger); border: 1px solid #fad2cf; }
 
-        /* Floating Nav (Compact Mobile) */
-        .floating-nav { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); width: max-content; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 50px; display: flex; padding: 4px; gap: 2px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); border: 1px solid var(--border); z-index: 100; transition: 0.3s; }
-        .floating-nav.hidden-down { transform: translate(-50%, 150px); opacity: 0; }
-        .nav-item { display: flex; align-items: center; justify-content: center; padding: 8px 10px; border-radius: 50px; color: var(--text-muted); cursor: pointer; transition: 0.3s; }
-        .nav-item svg { width: 18px; height: 18px; fill: currentColor; }
-        .nav-item span { font-size: 11px; font-weight: 700; max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; transition: 0.3s; }
-        .nav-item.active { background: var(--primary-light); color: var(--primary); padding: 8px 12px; }
-        .nav-item.active span { max-width: 60px; opacity: 1; margin-left: 4px; }
-        .collapse-btn { padding: 8px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; margin-left: 2px; }
-        .collapse-btn svg { width: 16px; height: 16px; fill: currentColor; }
-        .show-nav-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; background: var(--surface); border-radius: 50%; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; z-index: 99; cursor: pointer; color: var(--primary); transition: 0.3s; }
-        .show-nav-btn.hidden-down { transform: translateY(150px); opacity: 0; pointer-events: none; }
+        /* Standard Bottom Nav */
+        .floating-nav { position: absolute; bottom: 0; left: 0; width: 100%; background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 4px 8px; padding-bottom: max(4px, env(safe-area-inset-bottom)); z-index: 100; transition: 0.3s; }
+        .floating-nav.hidden-down { transform: translateY(100%); opacity: 0; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--text-muted); cursor: pointer; transition: 0.2s; padding: 4px; flex: 1; }
+        .nav-item svg { width: 20px; height: 20px; fill: currentColor; }
+        .nav-item span { font-size: 9px; font-weight: 800; white-space: nowrap; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active svg { background: var(--primary-light); border-radius: 50px; padding: 2px 12px; width: 44px; height: 24px; }
+        .collapse-btn { display: none; }
+        .show-nav-btn { display: none; }
         .desktop-nav-logout { display: none; }
 
         .floating-nav.nav-disabled { pointer-events: none; background: linear-gradient(90deg, #0e1b2b, #1b2e45); box-shadow: inset 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; border: none; }
@@ -369,9 +367,9 @@
                 <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                 <span>Rcvd</span>
             </div>
-            <div class="nav-item" onclick="switchTab('tab-shelf', 'Shelf Rentals', this)">
-                <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4zM2 4v16h20V4H2z" opacity="0.2"/><path d="M3 3v18h18V3H3zm15 14H6v-2h12v2zm0-5H6v-2h12v2zm0-5H6V5h12v2z"/></svg>
-                <span>Shelf</span>
+            <div class="nav-item" onclick="switchTab('tab-salpur', 'Sale vs Purchase', this)">
+                <svg viewBox="0 0 24 24"><path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"/></svg>
+                <span>Sal/Pur</span>
             </div>
             <div class="nav-item active" onclick="switchTab('tab-sales', 'Live Sales', this)">
                 <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
@@ -381,10 +379,8 @@
                 <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41L9.25 5.35C8.66 5.59 8.12 5.92 7.63 6.29L5.24 5.33a.488.488 0 00-.59.22L2.73 8.87a.49.49 0 00.12.61l2.03 1.58c-.04.3-.06.61-.06.94s.02.64.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
                 <span>Setup</span>
             </div>
-            <div class="collapse-btn" onclick="toggleNav()"><svg id="nav-arrow" viewBox="0 0 24 24"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg></div>
             <div class="desktop-nav-logout" onclick="logoutAdmin()">Sign Out →</div>
         </nav>
-        <div class="show-nav-btn hidden-down" id="show-nav-btn" onclick="toggleNav()"><svg viewBox="0 0 24 24" style="width:24px; fill:currentColor;"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg></div>
 
         <main class="main-content">
             <!-- DASHBOARD TAB -->
@@ -477,8 +473,10 @@
                 </div>
             </div>
 
-            <!-- DUMMY TABS -->
-            <div id="tab-shelf" class="tab-section"><div class="card" style="text-align:center; padding:40px 16px;"><h2 style="font-size:18px;">Shelf Rentals</h2><p style="font-size:12px; color:var(--text-muted);">Coming Soon</p></div></div>
+            <!-- SALE VS PURCHASE TAB -->
+            <div id="tab-salpur" class="tab-section">
+                <div id="salpur-category-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; padding: 4px;"></div>
+            </div>
             <div id="tab-sales" class="tab-section active">
                 <div class="dash-wrapper">
                     <div class="dash-left">
@@ -664,6 +662,13 @@
                     <span id="sales-label" class="upload-text">Upload Sales Data</span>
                 </div>
                 <div class="db-count" id="db-sales-count">Total in DB: 0 sales records</div>
+
+                <input type="file" id="purchase-file" accept=".csv" class="hidden" onchange="syncData(this, 'purchase')">
+                <div class="upload-zone" onclick="document.getElementById('purchase-file').click()">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    <span id="purchase-label" class="upload-text">Upload ERP Purchase Data</span>
+                </div>
+                <div class="db-count" id="db-purchase-count">Total in DB: 0 purchase records</div>
             </div>
         </div>
 
@@ -1086,7 +1091,7 @@
             document.getElementById('icon-calendar').classList.remove('hidden');
             document.getElementById('app-title').innerText = `Dashboard - ${adminBranch}`;
         }
-        if(tabId === 'tab-dashboard' || tabId === 'tab-purchase' || tabId === 'tab-sales') refreshDashboard();
+        if(tabId === 'tab-dashboard' || tabId === 'tab-purchase' || tabId === 'tab-sales' || tabId === 'tab-salpur') refreshDashboard();
     }
 
     function toggleNav() {
@@ -1257,9 +1262,10 @@
             
             const { count: saleCount } = await supabaseClient.from('sales_data').select('*', { count: 'exact', head: true }).eq('branch', branch);
             document.getElementById('db-sales-count').innerText = `Total in DB: ${saleCount || 0} sales records`;
-        } catch(e) {
-            console.error("Counter error:", e);
-        }
+
+            const { count: purCount } = await supabaseClient.from('purchase_data').select('*', { count: 'exact', head: true }).eq('branch', branch);
+            document.getElementById('db-purchase-count').innerText = `Total in DB: ${purCount || 0} purchase records`;
+        } catch(e) { console.error("Counter error:", e); }
     }
 
     function normalize(obj) { let newObj = {}; for(let key in obj) newObj[key.trim().toLowerCase()] = obj[key]; return newObj; }
@@ -1267,7 +1273,7 @@
     function syncData(input, type) {
         if(!input.files[0]) return;
         const file = input.files[0]; const branch = document.getElementById('upload-branch').value;
-        const label = document.getElementById(type === 'inventory' ? 'inv-label' : (type === 'sales' ? 'sales-label' : 'ven-label'));
+        const label = document.getElementById(type === 'inventory' ? 'inv-label' : (type === 'sales' ? 'sales-label' : (type === 'purchase' ? 'purchase-label' : 'ven-label')));
         const originalText = label.innerText; label.innerText = "Reading file...";
 
         const reader = new FileReader();
@@ -1288,19 +1294,16 @@
                         let iCode = row['item code'] || row['itemcode'] || ''; if(!iCode) return null;
                         return { item_code: String(iCode), item_name: row['item name'] || row['name'] || row['itemname'] || '', category: row['category group'] || row['category'] || row['categorygroup'] || '', brand: row['brand'] || '', cost: parseFloat(row['purchase cost'] || row['cost'] || row['purchasecost']) || 0, mrp: parseFloat(row['mrp']) || 0, barcode: String(row['barcode'] || ''), branch: branch };
                     }).filter(Boolean);
-
                     for(let i=0; i<batch.length; i+=500) {
                         label.innerText = `Uploading... ${Math.round((i/batch.length)*100)}%`;
                         const { error } = await supabaseClient.from('inventory').upsert(batch.slice(i, i+500), { onConflict: 'item_code, branch' });
                         if(error) throw error;
                     }
                     updateDbCounters(); label.innerText = `✓ Synced ${batch.length} items`;
-
-                } else if (type === 'sales') {
+                } else if (type === 'sales' || type === 'purchase') {
                     const batch = json.map(row => {
                         let iCode = row['itemcode'] || ''; let tDateRaw = row['transactiondate'] || '';
                         if(!iCode || !tDateRaw) return null;
-                        
                         let tDate = tDateRaw.split(' ')[0];
                         if(tDate.includes('/')) {
                             let p = tDate.split('/');
@@ -1310,19 +1313,26 @@
                             let p = tDate.split('-');
                             if(p[2] && p[2].length === 4) tDate = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
                         }
-
-                        return { 
-                            branch: branch, transaction_date: tDate, item_code: String(iCode), item_name: row['itemname'] || '', category: row['itemgroupname'] || 'Uncategorized',
-                            quantity: parseFloat(row['itemquantity']) || 0, sale_amount: parseFloat(row['itemtotalamount']) || 0, profit_amount: parseFloat(row['itemprofitamount']) || 0
-                        };
+                        
+                        let mappedRow = { branch: branch, transaction_date: tDate, item_code: String(iCode), item_name: row['itemname'] || '', category: row['itemgroupname'] || 'Uncategorized', quantity: parseFloat(row['itemquantity']) || 0 };
+                        
+                        if(type === 'sales') {
+                            mappedRow.sale_amount = parseFloat(row['itemtotalamount']) || 0;
+                            mappedRow.profit_amount = parseFloat(row['itemprofitamount']) || 0;
+                        } else {
+                            mappedRow.purchase_amount = parseFloat(row['itemtotalamount']) || 0;
+                        }
+                        return mappedRow;
                     }).filter(Boolean);
 
+                    const dbTable = type === 'sales' ? 'sales_data' : 'purchase_data';
                     for(let i=0; i<batch.length; i+=500) {
                         label.innerText = `Uploading... ${Math.round((i/batch.length)*100)}%`;
-                        const { error } = await supabaseClient.from('sales_data').insert(batch.slice(i, i+500));
+                        const { error } = await supabaseClient.from(dbTable).insert(batch.slice(i, i+500));
                         if(error) throw error;
                     }
-                    sales = await fetchAllRows('sales_data'); updateDbCounters(); label.innerText = `✓ Synced ${batch.length} sales`;
+                    if(type==='sales') sales = await fetchAllRows('sales_data'); 
+                    updateDbCounters(); label.innerText = `✓ Synced ${batch.length} ${type} records`;
 
                 } else {
                     const batch = json.map(v => { let vName = v.name || v.name || ''; if(!vName) return null; return { name: vName, branch: branch }; }).filter(Boolean);
@@ -1509,6 +1519,45 @@
                 });
 
                 drawSalesCharts(sData);
+            });
+        }
+
+        // 4. SAL/PUR COMPARISON TAB LOGIC
+        if(document.getElementById('tab-salpur').classList.contains('active')) {
+            document.getElementById('global-loader').classList.remove('hidden');
+            
+            supabaseClient.rpc('get_sal_pur_dashboard_data', { p_branch: adminBranch, p_start_date: globalFromDate, p_end_date: globalToDate }).then(res => {
+                document.getElementById('global-loader').classList.add('hidden');
+                if (res.error) { showAlert("Sal/Pur sync failed."); return; }
+                
+                const spData = res.data;
+                const listSP = document.getElementById('salpur-category-list'); listSP.innerHTML = '';
+                
+                const mapCat = {}; spData.cat_map.forEach(c => mapCat[c.category] = c);
+                
+                activeOrderedCats.forEach(cat => {
+                    if (mapCat[cat]) {
+                        const data = mapCat[cat]; 
+                        const diff = data.sale_value - data.pur_value;
+                        const grad = diff >= 0 ? 'grad-green' : 'grad-red';
+                        const sign = diff > 0 ? '+' : '';
+                        
+                        listSP.innerHTML += `<div class="cat-tile ${grad}" style="align-items:flex-start; display:flex; flex-direction:column; gap:8px;">
+                            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:6px;">
+                                <div class="cat-name">${cat}</div>
+                                <div class="cat-amt" style="font-size:14px; color:${diff >= 0 ? 'var(--success)' : 'var(--danger)'};">${sign}${fmt(diff)}</div>
+                            </div>
+                            <div style="width:100%; display:flex; justify-content:space-between; font-size:12px; font-weight:600;">
+                                <span style="color:var(--text-muted);">Sale Value</span>
+                                <span style="color:var(--text-main);">${fmt(data.sale_value)}</span>
+                            </div>
+                            <div style="width:100%; display:flex; justify-content:space-between; font-size:12px; font-weight:600;">
+                                <span style="color:var(--text-muted);">Purchase Value</span>
+                                <span style="color:var(--text-main);">${fmt(data.pur_value)}</span>
+                            </div>
+                        </div>`;
+                    }
+                });
             });
         }
     }
