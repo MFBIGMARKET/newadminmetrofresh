@@ -809,8 +809,8 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://huhfzxsrwdqakbpwxjrn.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1aGZ6eHNyd2RxYWticHd4anJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxMjY4MzUsImV4cCI6MjA5NTcwMjgzNX0.G6TTXOzSeVAnkzDkYzSGjqrvvPwLzJDMupnj0nDAh5o';
+    const SUPABASE_URL = 'https://vutapmtccysenwvqletd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1dGFwbXRjY3lzZW53dnFsZXRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4ODA2MTgsImV4cCI6MjEwNzQ1NjYxOH0.0gs8OLZ-p7ZZ_Q2Rn-OhyzyxPQ5sqyENMsswkpvqjH4';
     const windowSupabase = window.supabase; 
     const supabaseClient = windowSupabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -1290,10 +1290,14 @@
 
             try {
                 if (type === 'inventory') {
-                    const batch = json.map(row => {
-                        let iCode = row['item code'] || row['itemcode'] || ''; if(!iCode) return null;
-                        return { item_code: String(iCode), item_name: row['item name'] || row['name'] || row['itemname'] || '', category: row['category group'] || row['category'] || row['categorygroup'] || '', brand: row['brand'] || '', cost: parseFloat(row['purchase cost'] || row['cost'] || row['purchasecost']) || 0, mrp: parseFloat(row['mrp']) || 0, barcode: String(row['barcode'] || ''), branch: branch };
-                    }).filter(Boolean);
+                    // Auto-remove duplicates based on Item Code
+                    const uniqueMap = new Map();
+                    json.forEach(row => {
+                        let iCode = row['item code'] || row['itemcode'] || ''; if(!iCode) return;
+                        uniqueMap.set(String(iCode), { item_code: String(iCode), item_name: row['item name'] || row['name'] || row['itemname'] || '', category: row['category group'] || row['category'] || row['categorygroup'] || '', brand: row['brand'] || '', cost: parseFloat(row['purchase cost'] || row['cost'] || row['purchasecost']) || 0, mrp: parseFloat(row['mrp']) || 0, barcode: String(row['barcode'] || ''), branch: branch });
+                    });
+                    const batch = Array.from(uniqueMap.values());
+
                     for(let i=0; i<batch.length; i+=500) {
                         label.innerText = `Uploading... ${Math.round((i/batch.length)*100)}%`;
                         const { error } = await supabaseClient.from('inventory').upsert(batch.slice(i, i+500), { onConflict: 'item_code, branch' });
@@ -1335,7 +1339,14 @@
                     updateDbCounters(); label.innerText = `✓ Synced ${batch.length} ${type} records`;
 
                 } else {
-                    const batch = json.map(v => { let vName = v.name || v.name || ''; if(!vName) return null; return { name: vName, branch: branch }; }).filter(Boolean);
+                    // Auto-remove duplicates based on Vendor Name
+                    const uniqueMap = new Map();
+                    json.forEach(v => {
+                        let vName = v.name || v.name || ''; if(!vName) return;
+                        uniqueMap.set(String(vName).trim().toLowerCase(), { name: String(vName).trim(), branch: branch });
+                    });
+                    const batch = Array.from(uniqueMap.values());
+
                     for(let i=0; i<batch.length; i+=500) {
                         label.innerText = `Uploading... ${Math.round((i/batch.length)*100)}%`;
                         const { error } = await supabaseClient.from('vendors').upsert(batch.slice(i, i+500), { onConflict: 'name, branch' });
